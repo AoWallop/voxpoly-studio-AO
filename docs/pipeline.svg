@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 150" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="880" height="150" rx="10" fill="#15131c"/>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f0c874"/></marker></defs>
+  <g fill="#1d1a26" stroke="#f0c874" stroke-width="1.5">
+    <rect x="20" y="40" width="150" height="70" rx="8"/><rect x="200" y="40" width="150" height="70" rx="8"/>
+    <rect x="380" y="40" width="150" height="70" rx="8"/><rect x="560" y="40" width="150" height="70" rx="8"/><rect x="740" y="40" width="120" height="70" rx="8"/>
+  </g>
+  <g fill="#eee9e1" text-anchor="middle">
+    <text x="95" y="70" font-weight="700">Model code</text><text x="95" y="92" fill="#bdb6ad" font-size="12">models/*.js · kit.js</text>
+    <text x="275" y="70" font-weight="700">Studio</text><text x="275" y="92" fill="#bdb6ad" font-size="12">look · themes · clips</text>
+    <text x="455" y="70" font-weight="700">GLB + palettes</text><text x="455" y="92" fill="#bdb6ad" font-size="12">npm run export</text>
+    <text x="635" y="70" font-weight="700">Blender</text><text x="635" y="92" fill="#bdb6ad" font-size="12">FBX · Smart UV · AO</text>
+    <text x="800" y="70" font-weight="700">Unity</text><text x="800" y="92" fill="#bdb6ad" font-size="12">npm run send</text>
+  </g>
+  <g stroke="#f0c874" stroke-width="2" marker-end="url(#a)">
+    <line x1="170" y1="75" x2="198" y2="75"/><line x1="350" y1="75" x2="378" y2="75"/><line x1="530" y1="75" x2="558" y2="75"/><line x1="710" y1="75" x2="738" y2="75"/>
+  </g>
+  <text x="440" y="135" fill="#bdb6ad" font-size="12" text-anchor="middle">reference FBX + texture → npm run retopo → model data (clean low-poly · color slots · weighted normals)</text>
+</svg>

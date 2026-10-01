@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoxPoly Studio</title><link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#15131c;--panel:#1d1a26;--line:#ffffff1f;--text:#eee9e1;--muted:#bdb6ad;--gold:#f0c874;--acc:#7fd0ff;--warn:#ffb454}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:grid;grid-template-columns:250px 1fr 300px;background:var(--bg);color:var(--text);font-family:'Chakra Petch',Tahoma,sans-serif;overflow:hidden}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
+#refs{border-right:0;border-left:1px solid var(--line)}
+h1{font-size:15px;letter-spacing:2px;margin:0 0 2px;color:var(--gold)}
+.sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.sub a{color:var(--acc)}
+h2{font-size:12px;letter-spacing:1.5px;color:var(--muted);margin:16px 0 6px;font-weight:600}
+.list{display:flex;flex-direction:column;gap:4px}
+.wgrp{font-size:11px;color:var(--gold);letter-spacing:1px;margin:8px 0 2px;font-weight:600}
+.wgrp:first-child{margin-top:0}
+button{font:600 13px 'Chakra Petch',Tahoma;color:var(--text);background:#2a2533;border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer;text-align:left}
+button:hover{border-color:#f0c87488}
+button[aria-pressed=true]{background:#3a2f1c;border-color:var(--gold);color:#ffe3ab}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row button{text-align:center;flex:1;padding:7px 6px}
+#stage{position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;left:12px;top:10px;font-size:13px;color:var(--muted);pointer-events:none;line-height:1.7;text-shadow:0 1px 2px #000}
+#hud b{color:var(--text)}
+#hud .over{color:var(--warn)}
+#view{position:absolute;right:12px;top:10px;font-size:12px;color:var(--muted);pointer-events:none}
+#stats{font-size:12px;color:var(--muted);line-height:1.7}
+#stats b{color:var(--text)}
+#swatches{display:grid;grid-template-columns:1fr;gap:4px;font-size:12px}
+.sw{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.sw i{width:18px;height:18px;border-radius:4px;border:1px solid #ffffff30;flex:none}
+.sw b{color:var(--text);font-weight:600;min-width:58px}
+.tabs{margin-bottom:12px}
+.th{display:flex;align-items:center;gap:8px}
+.th .dots{display:flex;gap:3px;margin-left:auto}
+.th .dots i{width:12px;height:12px;border-radius:3px;border:1px solid #ffffff40}
+#texWrap{background:#0e0c12;border:1px solid var(--line);border-radius:6px;padding:6px}
+#tex{display:block;width:100%;image-rendering:pixelated;aspect-ratio:1}
+#slotList{display:flex;flex-direction:column;gap:3px;font-size:12px}
+#slotList .sl{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;border:1px solid transparent;color:var(--muted);cursor:default}
+#slotList .sl:hover,#slotList .sl.on{border-color:var(--gold);background:#2a2533;color:var(--text)}
+#slotList i{width:16px;height:16px;border-radius:3px;border:1px solid #ffffff30;flex:none}
+#slotList b{color:var(--text);font-weight:600;min-width:56px}
+#slotList em{font-style:normal;margin-left:auto;font-variant-numeric:tabular-nums}
+#refList{display:flex;flex-direction:column;gap:8px}
+#refList figure{margin:0;background:#0e0c12;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+#refList img{display:block;width:100%;cursor:zoom-in}
+#refList figcaption{font-size:11px;color:var(--muted);padding:4px 6px;word-break:break-all}
+#drop{border:1px dashed #ffffff40;border-radius:8px;padding:12px;font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
+#drop.over{border-color:var(--gold);color:var(--gold)}
+#zoom{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
+#zoom img{max-width:92vw;max-height:92vh}
+.note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px}
+kbd{font:600 10px 'Chakra Petch';padding:1px 5px;border:1px solid #ffffff38;border-radius:3px}
+</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+</head><body>
+<aside>
+  <h1>VOXPOLY STUDIO</h1><div class="sub">low-poly · three.js → FBX → Unity</div>
+  <h2 data-i18n="side.models">Models</h2>
+  <div class="list" id="models"></div>
+  <h2><span data-i18n="side.themes">Color themes</span> <small style="font-weight:500" data-i18n="side.themesHint">(texture only)</small></h2>
+  <div class="list" id="themes"></div>
+  <div id="animBox" hidden>
+    <h2><span data-i18n="side.anim">Animation</span> <small style="font-weight:500" data-i18n="side.animHint">(click to play)</small></h2>
+    <div class="list" id="animList"></div>
+    <div class="list" style="flex-direction:row;gap:4px;margin-top:4px"><button id="animLoop" aria-pressed="false" style="flex:1" data-i18n="side.loop">Loop</button><button id="animSlow" aria-pressed="false" style="flex:1" data-i18n="side.slow">Slow ×0.25</button></div>
+    <div class="sub" id="animInfo" style="margin-top:6px"></div>
+  </div>
+  <h2 data-i18n="side.exports">Exported files</h2>
+  <div class="list" id="fbxList"></div>
+  <h2 data-i18n="side.camera">Camera</h2>
+  <div class="row"><button data-v="front" data-i18n="v.front">Front</button><button data-v="side" data-i18n="v.side">Side</button><button data-v="top" data-i18n="v.top">Top</button><button data-v="persp" data-i18n="v.persp">3/4</button></div>
+  <div class="row" style="margin-top:6px"><button id="ortho" data-i18n="v.ortho">Ortho</button><button id="spin" data-i18n="v.spin">Turntable</button></div>
+  <div class="row" style="margin-top:6px"><button id="resetView"><span data-i18n="v.reset">↺ Reset view</span> <small data-i18n="v.resetHint">press R or F</small></button></div>
+  <h2 data-i18n="side.display">Display</h2>
+  <div class="row"><button id="wire" data-i18n="d.wire">Wireframe</button><button id="hand" aria-pressed="true" data-i18n="d.hand">Hand</button><button id="ruler" aria-pressed="true" data-i18n="d.ruler">Ruler</button></div>
+  <div class="row" style="margin-top:6px"><button id="softEdge" aria-pressed="true"><span data-i18n="d.soft">Soft edges</span> <small data-i18n="d.softHint">press S to compare</small></button></div>
+  <h2 data-i18n="side.stats">Model info</h2>
+  <div id="stats"></div>
+  <h2 data-i18n="side.palette">Palette (1 material)</h2>
+  <div id="swatches"></div>
+  <div class="note" data-i18n="help"></div>
+</aside>
+<main id="stage"><canvas id="c"></canvas><div id="hud"></div><div id="view"></div></main>
+<aside id="refs">
+  <div class="row tabs"><button data-tab="ref" aria-pressed="true" data-i18n="tab.ref">References</button><button data-tab="tex" data-i18n="tab.tex">Texture · UV</button></div>
+  <section id="tab-ref">
+    <div id="drop" data-i18n="drop"></div>
+    <div id="refList"></div>
+  </section>
+  <section id="tab-tex" hidden>
+    <div class="row" id="maps"><button data-map="albedo" aria-pressed="true">Albedo</button><button data-map="metal">Metallic</button><button data-map="smooth">Smooth</button><button data-map="emission">Emission</button></div>
+    <div id="texWrap"><canvas id="tex" width="512" height="512" aria-label="texture and UV points"></canvas></div>
+    <div class="row" style="margin-top:6px"><button id="uvDots" aria-pressed="true" data-i18n="tex.dots">UV points</button><button id="gridLines" aria-pressed="true" data-i18n="tex.grid">Cell lines</button></div>
+    <div id="texInfo" class="note"></div>
+    <h2><span data-i18n="tex.slots">Color slots</span> <small style="font-weight:500" data-i18n="tex.slotsHint">(hover to highlight)</small></h2>
+    <div id="slotList"></div>
+    <div class="note" data-i18n="tex.note"></div>
+  </section>
+</aside>
+<div id="zoom"><img alt=""></div>
+<script type="module" src="studio.js"></script>
+<style>aside h2.fold{cursor:pointer;user-select:none}aside h2.fold::before{content:'▾ ';color:var(--gold)}aside h2.fold.shut::before{content:'▸ '}.folded{display:none!important}</style>
+<script>
+// sidebar headings fold / unfold · remembered per page in localStorage
+(() => { const KEY = 'vp-fold-' + location.pathname.split('/').pop(), get = () => { try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return {}; } };
+  const st = get(), save = () => { try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
+  document.querySelectorAll('aside h2').forEach((h, i) => { const id = 'h' + i, sibs = []; for(let e = h.nextElementSibling; e && e.tagName !== 'H2'; e = e.nextElementSibling) sibs.push(e);
+    h.classList.add('fold'); const set = shut => { h.classList.toggle('shut', shut); sibs.forEach(e => e.classList.toggle('folded', shut)); };
+    set(st[id] ?? false); h.onclick = () => { st[id] = !h.classList.contains('shut'); set(st[id]); save(); }; }); })();
+</script>
+<script type="module" src="nav.js"></script>
+</body></html>

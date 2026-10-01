@@ -1,0 +1,17 @@
+# --- your own stuff (never committed) ---
+.env
+workspace/
+export/
+ref/
+
+# --- generated / cache ---
+.qc/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
+*.blend1
+
+# private word list for tools/scan-public.mjs (never committed)
+scan-words.txt
