@@ -1,7 +1,37 @@
 # ทำ Animation จาก FBX
 
 วิธีศึกษาท่าจากไฟล์ FBX แล้วสร้างใหม่บนโมเดลของเราเองใน three.js แม้โครงกระดูกจะคนละแบบ
-(เวอร์ชัน 1.1 จะมีเครื่องมือพร้อมใช้ทุกขั้น หน้านี้คือวิธีคิด)
+ข้อ 0 คือเครื่องมือพร้อมใช้ · ข้อ 1–3 คือวิธีคิดเบื้องหลัง
+
+## 0. เครื่องมือ (v1.1)
+
+ใส่ไฟล์ FBX ที่มี animation ไว้ใน **`workspace/fbx/`** (แบบ Unity ดีที่สุด: `Hero.fbx` + `Hero@Walk.fbx` + `Hero@Attack.fbx`)
+ทุกคำสั่งด้านล่างอ่านจากโฟลเดอร์นี้ และเขียนผลลง `workspace/` — ไม่มีอะไรถูกอัปโหลด
+
+```bash
+npm run motion -- dump                          # FBX ทุกไฟล์ → workspace/motion/<ไฟล์>.json (ตำแหน่งกระดูกทุกเฟรม เป็นวินาทีจริง)
+npm run motion -- rig workspace/motion/Hero@Walk.json   # เดาว่ากระดูกไหนคือสะโพก/อก/หัว/กราม/มือ/เท้า/หาง → workspace/motion/Hero.rig.json
+#   ↑ ต้องเปิด Hero.rig.json ตรวจทุกช่อง — แต่ละ rig ตั้งชื่อกระดูกไม่เหมือนกัน ช่องที่ไม่ใช้ลบทิ้งได้
+npm run motion -- channels Hero.rig.json        # ท่าทางรวมของทั้งตัวทุกท่า → workspace/motion/Hero_channels.js
+npm run serve                                   # แล้วเปิดแท็บ ดู FBX
+```
+
+- **หน้าดู FBX** (`viewer.html`): แสดงไฟล์ใน `workspace/fbx/` เล่น/เลื่อนดูท่า (ช้า ×0.25) แสดงโครงกระดูก
+  และวาด**กราฟความสูงกับความเร็วของกระดูกที่เลือก** — วิธีที่เร็วที่สุดในการดูว่าเท้าลงตอนไหน หรือท่าฟันเร็วสุดตอนไหน
+  ลิงก์ตรงไปมุมที่ต้องการได้: `viewer.html?open=Hero&clip=Walk&bone=LeftFoot`
+- **ใช้ channel กับโมเดลของเรา** (`models/motion.js`):
+  ```js
+  import { CLIPS } from '../workspace/motion/Hero_channels.js';
+  import { sampleClip, timePlan } from '../models/motion.js';
+  const ch = sampleClip(CLIPS.Walk, t, { loop:true });     // { turn, travel_x, travel_z, height, pitch, head_lift, head_yaw, jaw,
+                                                            //   hand_L_x/y/z, hand_R_x/y/z, foot_L_lift, foot_R_lift, tail0_lift ... }
+  hips.position.y = idle.hipY + ch.height;  chest.rotation.x = idle.pitch + ch.pitch;  // บวกเพิ่มบนท่ายืนของโมเดลเรา
+  ```
+  channel วัดเทียบกับเฟรมแรก และตามทิศที่ตัวหันอยู่ จึงใช้กับโครงกระดูกคนละแบบได้
+- **ปรับจังหวะโดยไม่ต้องทำท่าใหม่:** `timePlan(len, { cut:[[0.9, 2.0]], fast:[[3.0, 4.6, 2]] })` (เวลาเป็นวินาทีของท่าเดิม)
+  ใช้ `plan.toSource(tPlayed)` หาท่า และ `plan.toPlayed(tSource)` เลื่อนจุดเสียงตามไปด้วย
+- ไฟล์ที่มีท่าเดียวจะตั้งชื่อท่าตามชื่อไฟล์ (`Hero@Walk.fbx` ได้ชื่อ `Walk`) เพราะชื่อ take มักเป็น "Take 001" หรือ "mixamo.com"
+- ไฟล์ 24 / 25 / 60 fps จะถูกแปลงให้เวลาทุกจุดเป็นวินาทีจริง
 
 ## 1. อ่านการเคลื่อนไหวเป็นตัวเลข
 

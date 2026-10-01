@@ -15,6 +15,10 @@ with color themes, Smart-UV textures, soft/hard edges, simple bone animation, an
 | **Model Kit** (`models/kit.js`) | Write a model as code: loft, boxes/cylinders, thick plates (`slab.js`), soft edges, rigid-skin bones, palette colors (1 mesh · 1 material) |
 | **Export to Unity** (`npm run export`) | GLB → FBX (meters, Y-up, no leftover rotation) · textures per theme · Smart UV + baked textures + AO + UV layout · rigged models → avatar + one FBX per clip, auto-checked |
 | **Hand-off folder** (`npm run send`) | Clean `<Set>_SEND/` with FBX, Animations/, Textures/, UVLayout/, Preview/ |
+| **FBX Viewer** (`viewer.html`) | Open animated FBX from `workspace/fbx/`, play / scrub clips, graph the height and speed of any bone, see sound cues |
+| **Motion & sound tools** (`npm run motion`, `npm run cues`) | Read an FBX animation as numbers, re-use it on your own three.js model (`models/motion.js`), find footstep / swing / roar moments and play sounds on them (`models/cue_player.js`) |
+| **FBX Viewer** (`viewer.html`) | Open animated FBX from `workspace/fbx/`, play / scrub clips, graph the height and speed of any bone, see sound cues |
+| **Motion & sound tools** (`npm run motion`, `npm run cues`) | Read an FBX animation as numbers, re-use it on your own three.js model (`models/motion.js`), find footstep / swing / roar moments and play sounds on them (`models/cue_player.js`) |
 | **Topology tools** (`npm run retopo`, `tools/topo/`) | Measure wasted edges / skinny triangles / distance to a reference · rebuild a textured reference as clean low-poly with color slots and weighted normals |
 | **Docs** (`docs/`) | Modeling, export, topology, animation and sound-sync knowledge — in English and Thai |
 
@@ -51,7 +55,7 @@ your files are never uploaded and `git pull` never overwrites them. See [docs/en
 ```bash
 git pull
 ```
-Then read [CHANGELOG.md](CHANGELOG.md) for what changed.
+Then read [CHANGELOG.md](CHANGELOG.md) for what changed. If a new version adds a folder to `workspace.example/`, create it in your `workspace/` too. If a new version adds a folder to `workspace.example/`, create it in your `workspace/` too.
 
 ## Using with Claude Code
 

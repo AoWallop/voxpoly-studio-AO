@@ -26,6 +26,13 @@ Answer the user in the language they write in (Thai or English).
 - Measure before arguing: `tools/topo/audit.py` (wasted edges %, skinny %), `tools/topo/dist.py` (cm to reference).
 - Rebuild from a textured reference: `npm run retopo -- ...` (see `docs/en/topology.md`). Never move vertices off their plane to tidy a color line.
 
+## Animation & sound from FBX
+- FBX files go in `workspace/fbx/`. Flow: `npm run motion -- dump` → `npm run motion -- rig <dump>` → **read the rig file and fix every role**
+  (print the bone list, compare names) → `npm run motion -- channels <rig>` and/or `npm run cues -- <rig>`.
+- Check results in the FBX Viewer (`viewer.html?open=<Name>&clip=<clip>&bone=<bone>`) before trusting them; foot / hand bones are often misguessed.
+- Re-use motion on our own models as channels ADDED to the model's idle pose (`models/motion.js`); never copy bone angles across rigs.
+- Sound files are the user's. Keep cue times in original clip seconds; use `timePlan()` when clips are cut or sped up.
+
 ## Reporting to the user
 - Describe results in what they will SEE ("the star is now crisp", "the blue rim is even"), numbers second.
 - When comparing with a reference, label clearly which image is the reference and which is ours.

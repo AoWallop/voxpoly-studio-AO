@@ -1,7 +1,37 @@
 # Animation from FBX
 
 How to study an animation in an FBX and re-create it on your own model in three.js — even when the skeletons are different.
-(Version 1.1 will add ready tools for each step; this page is the method.)
+Section 0 is the ready tools; sections 1–3 are the method behind them.
+
+## 0. The tools (v1.1)
+
+Put your animated FBX files in **`workspace/fbx/`** (Unity style works best: `Hero.fbx` + `Hero@Walk.fbx` + `Hero@Attack.fbx`).
+Everything below reads from that folder and writes into `workspace/` — nothing is uploaded.
+
+```bash
+npm run motion -- dump                          # every FBX → workspace/motion/<file>.json (bone positions per frame, real seconds)
+npm run motion -- rig workspace/motion/Hero@Walk.json   # guess hips / chest / head / jaw / hands / feet / tail → workspace/motion/Hero.rig.json
+#   ↑ OPEN Hero.rig.json AND CHECK EVERY ROLE — every rig names its bones differently. Delete roles you don't need.
+npm run motion -- channels Hero.rig.json        # overall body pose per clip → workspace/motion/Hero_channels.js
+npm run serve                                   # then open the FBX Viewer tab
+```
+
+- **FBX Viewer** (`viewer.html`): lists `workspace/fbx/`, plays and scrubs clips (×0.25 slow), shows the skeleton,
+  and graphs the **height and speed of any bone** — the fastest way to see where a foot lands or a swing peaks.
+  Link straight to a view: `viewer.html?open=Hero&clip=Walk&bone=LeftFoot`.
+- **Channels on your model** (`models/motion.js`):
+  ```js
+  import { CLIPS } from '../workspace/motion/Hero_channels.js';
+  import { sampleClip, timePlan } from '../models/motion.js';
+  const ch = sampleClip(CLIPS.Walk, t, { loop:true });     // { turn, travel_x, travel_z, height, pitch, head_lift, head_yaw, jaw,
+                                                            //   hand_L_x/y/z, hand_R_x/y/z, foot_L_lift, foot_R_lift, tail0_lift ... }
+  hips.position.y = idle.hipY + ch.height;  chest.rotation.x = idle.pitch + ch.pitch;  // ADD to your own idle pose
+  ```
+  Channels are measured relative to the first frame and in the body's own facing, so they work on a different skeleton.
+- **Edit timing without re-animating:** `timePlan(len, { cut:[[0.9, 2.0]], fast:[[3.0, 4.6, 2]] })` (times in original seconds)
+  gives `plan.toSource(tPlayed)` for the pose and `plan.toPlayed(tSource)` to move sound cues the same way.
+- A file with one take is named after the file (`Hero@Walk.fbx` = `Walk`), because takes are often called "Take 001" or "mixamo.com".
+- Files at 24 / 25 / 60 fps are resampled, so every time you see is in real seconds.
 
 ## 1. Read the motion as numbers
 

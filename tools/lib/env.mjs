@@ -28,7 +28,7 @@ export function need(key, hint){
 // Run a process, stream selected lines, resolve with the full output.
 export function run(cmd, args, { filter = null, cwd = ROOT, quiet = false } = {}){
   return new Promise((ok, bad) => {
-    const p = spawn(cmd, args, { cwd, windowsHide:true });
+    const p = spawn(cmd, args, { cwd, windowsHide:true, env:{ ...process.env, PYTHONIOENCODING:'utf-8', PYTHONUTF8:'1' } });   // Windows consoles default to cp1252
     let all = '';
     const onData = d => { const s = d.toString(); all += s;
       if(!quiet) for(const line of s.split(/\r?\n/)) if(line && (!filter || filter.test(line))) console.log(line); };

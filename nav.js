@@ -4,6 +4,7 @@ import { t, getLang, setLang, applyLang } from './i18n.js';
 
 const PAGES = [
   ['index.html', 'nav.studio'],
+  ['viewer.html', 'nav.viewer'],
 ];
 const q = new URLSearchParams(location.search);
 if(!['qc', 'export'].some(k => q.has(k))){

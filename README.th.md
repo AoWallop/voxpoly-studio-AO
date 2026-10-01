@@ -15,6 +15,10 @@
 | **ชุดสร้างโมเดล** (`models/kit.js`) | เขียนโมเดลเป็นโค้ด: loft · กล่อง/ทรงกระบอก · แผ่นหนา (`slab.js`) · soft edge · กระดูกแบบ rigid · สีจาก palette (1 mesh · 1 วัสดุ) |
 | **Export ไป Unity** (`npm run export`) | GLB → FBX (หน่วยเมตร · Y ขึ้น · ไม่มี rotation ค้าง) · texture ทุกธีม · Smart UV + bake + AO + UV layout · โมเดลมีกระดูก → avatar + ไฟล์ท่าละไฟล์ ตรวจให้อัตโนมัติ |
 | **โฟลเดอร์ส่งงาน** (`npm run send`) | `<Set>_SEND/` สะอาด: FBX · Animations/ · Textures/ · UVLayout/ · Preview/ |
+| **หน้าดู FBX** (`viewer.html`) | เปิด FBX ที่มี animation จาก `workspace/fbx/` · เล่น/เลื่อนดูท่า · กราฟความสูงและความเร็วของกระดูกที่เลือก · ดูจุดใส่เสียง |
+| **เครื่องมือท่าและเสียง** (`npm run motion`, `npm run cues`) | อ่านท่าจาก FBX เป็นตัวเลข เอาไปใช้กับโมเดล three.js ของเรา (`models/motion.js`) · หาจังหวะเท้าลง/ฟัน/คำราม แล้วเล่นเสียงตามจังหวะ (`models/cue_player.js`) |
+| **หน้าดู FBX** (`viewer.html`) | เปิด FBX ที่มี animation จาก `workspace/fbx/` · เล่น/เลื่อนดูท่า · กราฟความสูงและความเร็วของกระดูกที่เลือก · ดูจุดใส่เสียง |
+| **เครื่องมือท่าและเสียง** (`npm run motion`, `npm run cues`) | อ่านท่าจาก FBX เป็นตัวเลข เอาไปใช้กับโมเดล three.js ของเรา (`models/motion.js`) · หาจังหวะเท้าลง/ฟัน/คำราม แล้วเล่นเสียงตามจังหวะ (`models/cue_player.js`) |
 | **เครื่องมือ Topology** (`npm run retopo`, `tools/topo/`) | วัดเส้นล้น / สามเหลี่ยมผอม / ระยะคลาดจากต้นแบบ · สร้าง low-poly สะอาดจากโมเดลต้นแบบที่มี texture พร้อมช่องสีและ weighted normal |
 | **เอกสาร** (`docs/`) | การปั้น · export · topology · animation · การทำเสียงให้เข้ากับท่า — ภาษาไทยและอังกฤษ |
 
@@ -51,7 +55,7 @@
 ```bash
 git pull
 ```
-แล้วดูว่ามีอะไรใหม่ใน [CHANGELOG.md](CHANGELOG.md)
+แล้วดูว่ามีอะไรใหม่ใน [CHANGELOG.md](CHANGELOG.md) ถ้าเวอร์ชันใหม่เพิ่มโฟลเดอร์ใน `workspace.example/` ให้สร้างโฟลเดอร์นั้นใน `workspace/` ของคุณด้วย
 
 ## ใช้กับ Claude Code
 
