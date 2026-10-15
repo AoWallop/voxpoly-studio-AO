@@ -17,8 +17,9 @@
 | **โฟลเดอร์ส่งงาน** (`npm run send`) | `<Set>_SEND/` สะอาด: FBX · Animations/ · Textures/ · UVLayout/ · Preview/ |
 | **หน้าดู FBX** (`viewer.html`) | เปิด FBX ที่มี animation จาก `workspace/fbx/` · เล่น/เลื่อนดูท่า · กราฟความสูงและความเร็วของกระดูกที่เลือก · ดูจุดใส่เสียง |
 | **เครื่องมือท่าและเสียง** (`npm run motion`, `npm run cues`) | อ่านท่าจาก FBX เป็นตัวเลข เอาไปใช้กับโมเดล three.js ของเรา (`models/motion.js`) · หาจังหวะเท้าลง/ฟัน/คำราม แล้วเล่นเสียงตามจังหวะ (`models/cue_player.js`) |
-| **หน้าดู FBX** (`viewer.html`) | เปิด FBX ที่มี animation จาก `workspace/fbx/` · เล่น/เลื่อนดูท่า · กราฟความสูงและความเร็วของกระดูกที่เลือก · ดูจุดใส่เสียง |
-| **เครื่องมือท่าและเสียง** (`npm run motion`, `npm run cues`) | อ่านท่าจาก FBX เป็นตัวเลข เอาไปใช้กับโมเดล three.js ของเรา (`models/motion.js`) · หาจังหวะเท้าลง/ฟัน/คำราม แล้วเล่นเสียงตามจังหวะ (`models/cue_player.js`) |
+| **ลอก FBX** (`clone.html`, `npm run clone`) | คัดลอก FBX ที่มี rig + ท่า เข้า three.js ครบทุกจุด หน้า UV น้ำหนัก และทุกเฟรม ตรวจเทียบ Blender คลาดราว 0.01 มม. · ดูเส้น topo จริง · **แถบปรับสัดส่วน 17 แถบ** (หัว แขนขา ความอวบ…) ใช้ได้กับ rig ทุกแบบการตั้งชื่อ · **preset** · เครื่องมือ UV สำหรับทีม Art · ส่งออก GLB พร้อม rig และท่า |
+| **แสงเงาการ์ตูน** (`models/toon.js`) | เรียกครั้งเดียวได้ขั้นแสงเงาการ์ตูน + เส้นขอบทั้งฉาก (รวมตัวละครที่มี skin) · ปรับขั้นแสง เงา เส้นขอบได้ |
+| **ตัววัดภาระการวาด** (`models/perf.js`) | draw call · สามเหลี่ยม · fps ทุกหน้า เทียบกับงบ VR |
 | **เครื่องมือ Topology** (`npm run retopo`, `tools/topo/`) | วัดเส้นล้น / สามเหลี่ยมผอม / ระยะคลาดจากต้นแบบ · สร้าง low-poly สะอาดจากโมเดลต้นแบบที่มี texture พร้อมช่องสีและ weighted normal |
 | **เอกสาร** (`docs/`) | การปั้น · export · topology · animation · การทำเสียงให้เข้ากับท่า — ภาษาไทยและอังกฤษ |
 
@@ -69,6 +70,8 @@ git pull
 - [Export ไป Unity](docs/th/export-unity.md)
 - [Topology](docs/th/topology.md)
 - [ทำ Animation จาก FBX](docs/th/animation.md)
+- [ลอก FBX — ลอกเป๊ะ · ปรับสัดส่วน · preset](docs/th/fbx-clone.md)
+- [แสงเงาการ์ตูนและภาระการวาด](docs/th/look-and-performance.md)
 - [ทำเสียงให้เข้ากับท่า](docs/th/sound-sync.md)
 
 ## License

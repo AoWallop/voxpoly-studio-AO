@@ -4,6 +4,7 @@
 
 Build game-ready **low-poly models in code** (three.js), check them in the browser, and export them to **FBX for Unity** —
 with color themes, Smart-UV textures, soft/hard edges, simple bone animation, and tools to **learn topology from reference models**.
+New in 2.5: **copy a rigged FBX character into three.js exactly, reshape it with sliders and save the result as presets** — plus cel shade for any scene.
 
 ![pipeline](docs/pipeline.svg)
 
@@ -17,8 +18,9 @@ with color themes, Smart-UV textures, soft/hard edges, simple bone animation, an
 | **Hand-off folder** (`npm run send`) | Clean `<Set>_SEND/` with FBX, Animations/, Textures/, UVLayout/, Preview/ |
 | **FBX Viewer** (`viewer.html`) | Open animated FBX from `workspace/fbx/`, play / scrub clips, graph the height and speed of any bone, see sound cues |
 | **Motion & sound tools** (`npm run motion`, `npm run cues`) | Read an FBX animation as numbers, re-use it on your own three.js model (`models/motion.js`), find footstep / swing / roar moments and play sounds on them (`models/cue_player.js`) |
-| **FBX Viewer** (`viewer.html`) | Open animated FBX from `workspace/fbx/`, play / scrub clips, graph the height and speed of any bone, see sound cues |
-| **Motion & sound tools** (`npm run motion`, `npm run cues`) | Read an FBX animation as numbers, re-use it on your own three.js model (`models/motion.js`), find footstep / swing / roar moments and play sounds on them (`models/cue_player.js`) |
+| **FBX Clone** (`clone.html`, `npm run clone`) | Copy a rigged FBX + clips into three.js — every vertex, face, UV, weight and frame, verified against Blender to ~0.01 mm · see the real edge flow · **17 proportion sliders** (head, limbs, girth…) that work on any rig naming · **presets** · UV tools for artists · export GLB with rig + clips |
+| **Cel shade** (`models/toon.js`) | One call gives a whole scene cartoon light steps + outlines (skinned characters included) · adjustable steps / shadow / outline |
+| **Render cost meter** (`models/perf.js`) | Draw calls · triangles · fps on every page, against a VR budget |
 | **Topology tools** (`npm run retopo`, `tools/topo/`) | Measure wasted edges / skinny triangles / distance to a reference · rebuild a textured reference as clean low-poly with color slots and weighted normals |
 | **Docs** (`docs/`) | Modeling, export, topology, animation and sound-sync knowledge — in English and Thai |
 
@@ -55,7 +57,7 @@ your files are never uploaded and `git pull` never overwrites them. See [docs/en
 ```bash
 git pull
 ```
-Then read [CHANGELOG.md](CHANGELOG.md) for what changed. If a new version adds a folder to `workspace.example/`, create it in your `workspace/` too. If a new version adds a folder to `workspace.example/`, create it in your `workspace/` too.
+Then read [CHANGELOG.md](CHANGELOG.md) for what changed. If a new version adds a folder to `workspace.example/`, create it in your `workspace/` too.
 
 ## Using with Claude Code
 
@@ -70,6 +72,8 @@ Open the folder in Claude Code and ask for a model; it will follow the same pipe
 - [Topology](docs/en/topology.md)
 - [Animation from FBX](docs/en/animation.md)
 - [Sound that follows animation](docs/en/sound-sync.md)
+- [FBX Clone — exact copy, proportions, presets](docs/en/fbx-clone.md)
+- [Cel shade and render cost](docs/en/look-and-performance.md)
 
 ## License
 

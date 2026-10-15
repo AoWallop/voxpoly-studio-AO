@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoxPoly Studio · FBX Clone</title><link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<style>
+/* ===== FBX Clone: rigged FBX + clips → three.js, every vertex exact · reshape with sliders · presets · real edge flow · GLB ===== */
+:root{color-scheme:dark;--bg:#15131c;--panel:#1d1a26ee;--line:#ffffff1f;--text:#eee9e1;--muted:#bdb6ad;--gold:#f0c874;--acc:#7fd0ff;--ok:#8fd694;--warn:#ffb27a}
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font:13px 'Chakra Petch',Tahoma,sans-serif}
+canvas{display:block}
+#ui{position:fixed;left:10px;top:50px;width:300px;max-height:calc(100vh - 60px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;z-index:2}
+#ui h1{font-size:15px;margin:0;color:var(--gold);letter-spacing:1px}
+.sub{color:var(--muted);font-size:12px;margin:2px 0 8px;line-height:1.5}
+h2{font-size:11px;letter-spacing:1.5px;color:var(--muted);margin:12px 0 5px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;gap:5px;flex-wrap:wrap}
+button{background:#2a2533;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 9px;cursor:pointer;font:inherit}
+button:hover{border-color:#f0c87488} button.on{background:#3a2f1c;border-color:var(--gold);color:#ffe3ab}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#stats{white-space:pre-line;font-size:12px;color:var(--muted);line-height:1.55}
+#stats b{color:var(--text)} #stats .ok{color:var(--ok)} #stats .bad{color:#ff9b8a}
+.sl{display:grid;grid-template-columns:96px 1fr 40px;align-items:center;gap:6px;margin:3px 0;font-size:12px}
+.sl span:last-child{text-align:right;color:var(--gold);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--gold)}
+input[type=text]{flex:1;min-width:0;background:#120f18;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 7px;font:inherit}
+#anim{display:flex;gap:6px;align-items:center} #anim input{flex:1}
+#err{color:#ff9b8a;white-space:pre-wrap}
+.note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px}
+code{font-size:11px;background:#0e0c12;padding:1px 4px;border-radius:3px}
+#pcur{margin-top:8px;padding:6px 8px;border-radius:6px;background:#120f18;border:1px solid var(--line);font-size:12px}
+#roles{font-size:11px;color:var(--muted);line-height:1.6;max-height:180px;overflow:auto;display:none}
+#roles b{color:var(--text);font-weight:600}
+#empty{position:fixed;inset:40px 0 0 0;display:none;place-items:center;text-align:center;color:var(--muted);line-height:1.8;padding:20px}
+#empty b{color:var(--gold)}
+#uvp{display:none;position:fixed;right:12px;top:50px;bottom:12px;width:min(52vw,calc(100vh - 150px));background:#1d1a26f5;border:1px solid var(--line);border-radius:10px;padding:10px;z-index:3;overflow:auto}
+@media (max-width:700px){#ui{width:calc(100vw - 20px);max-height:45vh;top:auto;bottom:10px}}
+</style></head><body>
+<div id="ui">
+  <h1 data-i18n="cl.title">FBX CLONE</h1><div class="sub" id="sub"></div>
+  <div class="row" id="chars" style="margin-bottom:4px"></div>
+  <h2 data-i18n="cl.check">Exactness</h2><div id="stats">…</div>
+  <h2><span data-i18n="cl.roles">Bone roles</span><button id="rolesBtn" style="padding:1px 8px;font-size:11px" data-i18n="cl.show">show</button></h2>
+  <div id="roles"></div>
+  <h2 data-i18n="cl.clips">Clips</h2>
+  <div class="row" id="clips"></div>
+  <div class="sl" style="margin-top:6px"><span data-i18n="cl.speed">Speed</span><input id="spd" type="range" min=".25" max="2" step=".05" value="1"><span id="spdv">1.00</span></div>
+  <div id="anim" style="margin-top:6px"><button id="play">⏸</button><input id="t" type="range" min="0" max="1" step=".001" value="0"><span id="tv">0.00</span></div>
+  <div id="partBox" style="display:none"><h2 data-i18n="cl.parts">Parts (source meshes)</h2><div class="row" id="parts"></div></div>
+  <h2 data-i18n="cl.view">View</h2>
+  <div class="row"><button id="tex" class="on" data-i18n="cl.texture">Texture</button><button id="edges" data-i18n="cl.edges">Edge flow (E)</button><button id="bones" data-i18n="cl.bones">Bones</button><button id="spin" data-i18n="cl.spin">Spin</button></div>
+  <h2 data-i18n="cl.shade">Shading</h2>
+  <div class="row" id="shades"><button data-s="toon" data-i18n="cl.toon">Cel shade</button><button data-s="lit" data-i18n="cl.lit">Standard</button></div>
+  <div id="toonopt">
+    <div class="sl"><span data-i18n="cl.steps">Light steps</span><input id="steps" type="range" min="2" max="4" step="1" value="2"><span id="stepsv">2</span></div>
+    <div class="sl"><span data-i18n="cl.dark">Shadow</span><input id="dark" type="range" min="0" max="1" step=".05" value=".55"><span id="darkv">.55</span></div>
+    <div class="sl"><span data-i18n="cl.outline">Outline mm</span><input id="ol" type="range" min="0" max="6" step=".1" value="2"><span id="olv">2.0</span></div>
+  </div>
+  <h2 data-i18n="cl.camera">Camera (1–4 · R reset)</h2>
+  <div class="row" id="views"><button data-v="front" data-i18n="v.front">Front</button><button data-v="side" data-i18n="v.side">Side</button><button data-v="back" data-i18n="cl.back">Back</button><button data-v="persp">3D</button></div>
+  <h2><span data-i18n="cl.shape">Proportions</span><button id="reset" style="padding:1px 8px;font-size:11px" data-i18n="cl.reset">original</button></h2>
+  <div id="props"></div>
+  <div id="pcur"></div>
+  <div class="note" data-i18n="cl.pnote">Name the preset, then save (same name = overwrite)</div>
+  <div class="row"><input id="pname" type="text" placeholder="chibi_kid, tall_hero…"><button id="psave" data-i18n="cl.save">💾 Save preset</button></div>
+  <div class="row" id="plist" style="margin-top:6px"></div>
+  <div id="pmsg" class="note"></div>
+  <h2 data-i18n="cl.uv">UV / texture (for artists)</h2>
+  <div class="row"><button id="uvview" data-i18n="cl.uvview">UV layout</button><button id="checker" data-i18n="cl.checker">Checker on model</button></div>
+  <div class="row" style="margin-top:5px"><button id="duv" data-i18n="cl.duv">⬇ UV lines (transparent)</button><button id="duv2" data-i18n="cl.duv2">⬇ UV + texture</button><button id="dobj" data-i18n="cl.dobj">⬇ OBJ to paint</button></div>
+  <h2 data-i18n="cl.export">Export</h2>
+  <div class="row"><button id="glb" data-i18n="cl.glb">⬇ GLB (rig + clips)</button></div>
+  <div class="note" data-i18n="cl.glbnote">Exports the proportions you see. Cel shade and outline are display only (GLB has no toon material) — use models/toon.js in your game.</div>
+  <div id="err"></div>
+</div>
+<div id="uvp"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--gold)" data-i18n="cl.uvview">UV layout</b><span style="font-size:12px;color:var(--muted)"><label><input type="checkbox" id="uvtex" checked> <span data-i18n="cl.texture">Texture</span></label> <button id="uvclose" style="padding:1px 8px">✕</button></span></div><canvas id="uvc" width="1024" height="1024" style="width:100%;margin-top:6px;border-radius:6px;background:#969696"></canvas></div>
+<div id="empty"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
+import { loadClone, PROPORTIONS, proportionBones, modsFromSliders } from './models/clone.js';
+import { CENTER_ROLES, LIMB_ROLES } from './models/rigroles.js';
+import { t, getLang } from './i18n.js';
+addEventListener('langchange', () => location.reload());   // labels built in code are made once
+
+const Q = new URLSearchParams(location.search), QC = Q.get('qc') === '1', $ = id => document.getElementById(id);
+const log = m => fetch('/__log?m=' + encodeURIComponent(m)).catch(() => {});
+window.onerror = (m, s, l, c, e) => { log('ERR ' + m + ' @ ' + (e?.stack || s + ':' + l)); $('err').textContent = m; };
+addEventListener('unhandledrejection', e => { log('ERR ' + (e.reason?.stack || e.reason)); $('err').textContent = String(e.reason?.message || e.reason); });
+if (QC) $('ui').style.display = 'none';
+
+// ---------- registry (written by npm run clone) ----------
+const reg = await fetch('workspace/clones/index.json?t=' + Date.now()).then(r => r.ok ? r.json() : []).catch(() => []);
+if (!reg.length) { $('ui').style.display = 'none'; $('empty').style.display = 'grid'; $('empty').innerHTML = t('cl.empty'); log('ERR no clones in workspace/clones/index.json'); throw new Error('no clones yet'); }
+const R = reg.find(r => r.id === Q.get('m')) || reg[0];
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(QC ? 1 : devicePixelRatio); renderer.setSize(innerWidth, innerHeight); renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(QC ? 0xffffff : 0x15131c);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = .7;
+const hemi = new THREE.HemisphereLight(0xffffff, 0x404048, .9); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(.5, 1, .9); scene.add(key);
+const persp = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, .005, 200), ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, -100, 100);
+let cam = persp;
+
+const C = await loadClone(R.json + '?t=' + Date.now(), { texture: R.texture, roles: R.roles });
+scene.add(C.root);
+const D = C.data, texMat = C.getMaterial(), clay = new THREE.MeshStandardMaterial({ color: 0xb8bec8, roughness: .75 });
+const H0 = new THREE.Box3().setFromObject(C.mesh, true).getSize(new THREE.Vector3()).y || 1;
+const grid = new THREE.GridHelper(Math.max(1, Math.ceil(H0 * 2)), 10, 0x3a4250, 0x262c35); if (!QC) scene.add(grid);
+
+// ---------- cel shade: MeshToonMaterial + light steps (gradient map) + inverted-hull outline that follows the skinning ----------
+let shade = Q.get('shade') || 'toon', useTex = true;
+const grad = new THREE.DataTexture(new Uint8Array(4), 4, 1, THREE.RedFormat); grad.minFilter = grad.magFilter = THREE.NearestFilter;
+function setGrad(steps, dark) {                          // darkest step = dark · then even steps up to full light
+  const n = Math.round(steps), a = new Uint8Array(n);
+  for (let i = 0; i < n; i++) a[i] = Math.round(255 * (dark + (1 - dark) * i / (n - 1)));
+  grad.image = { data: a, width: n, height: 1 }; grad.needsUpdate = true; }
+setGrad(2, .55);
+const toonTex = new THREE.MeshToonMaterial({ map: texMat.map, gradientMap: grad }), toonClay = new THREE.MeshToonMaterial({ color: 0xc3c8d0, gradientMap: grad });
+const olU = { value: 0.002 };
+const olMat = new THREE.MeshBasicMaterial({ color: 0x15131c, side: THREE.BackSide });
+olMat.onBeforeCompile = sh => { sh.uniforms.olW = olU;   // push along the SKINNED normal, so the outline stays even while the clip plays
+  sh.vertexShader = 'uniform float olW;\n' + sh.vertexShader.replace('#include <skinning_vertex>', '#include <skinning_vertex>\n  transformed += normalize( objectNormal ) * olW;'); };
+const outline = new THREE.SkinnedMesh(C.mesh.geometry, olMat); outline.name = 'outline';
+C.root.add(outline); outline.bind(C.skeleton, C.mesh.bindMatrix);
+function applyShade() {
+  const toon = shade === 'toon';
+  C.setMaterial(toon ? (useTex ? toonTex : toonClay) : (useTex ? texMat : clay));
+  outline.material = C.groups.length > 1 ? C.groups.map(g => C.isVisible(g) ? olMat : new THREE.MeshBasicMaterial({ visible: false })) : olMat;
+  outline.visible = toon && olU.value > 0;
+  hemi.intensity = toon ? .25 : .9; key.intensity = toon ? 2.4 : 1.4; scene.environmentIntensity = toon ? 0 : .7;
+  document.querySelectorAll('#shades button').forEach(b => b.classList.toggle('on', b.dataset.s === shade));
+  $('toonopt').style.display = toon ? 'block' : 'none';
+}
+$('sub').innerHTML = `${D.source}${R.texture ? '' : ' · <span style="color:var(--warn)">' + t('cl.notex') + '</span>'}`;
+$('chars').innerHTML = reg.map(r => `<a href="clone.html?m=${encodeURIComponent(r.id)}" style="text-decoration:none"><button class="${r.id === R.id ? 'on' : ''}">${r.name}</button></a>`).join('');
+let edges = null; const skelHelp = new THREE.SkeletonHelper(C.root); skelHelp.visible = false; scene.add(skelHelp);
+
+// ---------- bone roles (what the sliders act on) ----------
+const roleRows = [...CENTER_ROLES, ...LIMB_ROLES.flatMap(r => [r + '.L', r + '.R'])];
+$('roles').innerHTML = roleRows.map(r => `<div>${r}: ${C.roles[r] ? '<b>' + C.roles[r] + '</b>' : '<span style="color:var(--warn)">—</span>'}</div>`).join('') + `<div class="note">${t('cl.rolesfix')}</div>`;
+$('rolesBtn').onclick = () => { const on = $('roles').style.display !== 'block'; $('roles').style.display = on ? 'block' : 'none'; $('rolesBtn').textContent = t(on ? 'cl.hide' : 'cl.show'); };
+
+// ---------- clips ----------
+const mixer = new THREE.AnimationMixer(C.root); let act = null, cur = null, playing = true;
+function play(name) { cur = name; const tt = act ? act.time : 0; mixer.stopAllAction(); mixer.uncacheRoot(C.root);
+  act = mixer.clipAction(C.clips[name]); act.play(); act.time = tt % C.clips[name].duration; act.paused = !playing; $('t').max = C.clips[name].duration;
+  document.querySelectorAll('#clips button').forEach(b => b.classList.toggle('on', b.dataset.c === name)); }
+const names = Object.keys(C.clips);
+$('clips').innerHTML = `<button data-c="">${t('cl.rest')}</button>` + names.map(n => `<button data-c="${n}">${n}</button>`).join('');
+document.querySelectorAll('#clips button').forEach(b => b.onclick = () => { if (!b.dataset.c) { mixer.stopAllAction(); act = null; cur = null; C.skeleton.pose(); document.querySelectorAll('#clips button').forEach(x => x.classList.toggle('on', x === b)); } else play(b.dataset.c); });
+$('spd').oninput = e => { mixer.timeScale = +e.target.value; $('spdv').textContent = (+e.target.value).toFixed(2); };
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸' : '▶'; if (act) act.paused = !playing; };
+$('t').oninput = e => { if (!act) return; playing = false; $('play').textContent = '▶'; act.paused = true; act.time = +e.target.value; mixer.update(0); };
+
+// ---------- parts (several source meshes → show / hide each) ----------
+if (C.groups.length > 1) { $('partBox').style.display = 'block';
+  $('parts').innerHTML = C.groups.map(g => `<button class="${C.isVisible(g) ? 'on' : ''}" data-g="${g}">${g}</button>`).join('');
+  document.querySelectorAll('#parts button').forEach(b => b.onclick = () => { const on = !b.classList.contains('on'); b.classList.toggle('on', on); C.setVisible(b.dataset.g, on); applyShade();
+    if (edges) { const vis = edges.visible; C.root.remove(edges); edges = C.quadLines().lines; edges.visible = vis; C.root.add(edges); } }); }
+
+// ---------- exactness report ----------
+let shaped = false;
+function report() {
+  const errs = !shaped ? names.map(n => C.verify(n)).filter(e => e !== null) : [], err = errs.length ? Math.max(...errs) : null, k = D.counts;
+  const H = (C.mesh.geometry.boundingBox?.max.y ?? 0) - (C.mesh.geometry.boundingBox?.min.y ?? 0);
+  $('stats').innerHTML = t('cl.counts', k, names.length, (H * 100).toFixed(1)) + '\n' +
+    (shaped ? t('cl.shaped') : err === null ? t('cl.nocheck') : t('cl.err', err.toFixed(3), err < .1));
+  return err ?? 0;
+}
+
+// ---------- proportions (sliders act on ROLES, so any rig naming works) ----------
+const PB = proportionBones(D.bones, C.roles), SL = PROPORTIONS.filter(([id]) => PB[id].length);
+const val = Object.fromEntries(SL.map(([id]) => [id, 1]));
+$('props').innerHTML = SL.map(([id]) => `<div class="sl" title="${PB[id].join(', ')}"><span>${t('pr.' + id)}</span><input type="range" min=".6" max="1.6" step=".01" value="1" data-id="${id}"><span id="pv_${id}">1.00</span></div>`).join('');
+function applyShape(fromUser) {
+  shaped = Object.values(val).some(v => Math.abs(v - 1) > 1e-6);
+  C.reshape(modsFromSliders(D.bones, C.roles, val)); if (cur) play(cur); report(); if (fromUser) showCur(curPreset, true);
+}
+function setSliders(map) { for (const [id] of SL) { val[id] = map?.[id] ?? 1; document.querySelector(`#props input[data-id="${id}"]`).value = val[id]; $('pv_' + id).textContent = val[id].toFixed(2); } applyShape(); }
+document.querySelectorAll('#props input').forEach(s => s.oninput = e => { const id = e.target.dataset.id; val[id] = +e.target.value; $('pv_' + id).textContent = val[id].toFixed(2); applyShape(true); });
+$('reset').onclick = () => { setSliders({}); showCur(null, false); };
+
+// ---------- presets: workspace/presets/<model>/<name>.json (sliders + the bone mods they make + size + shading) ----------
+let curPreset = null;
+const showCur = (name, dirty) => { curPreset = name; $('pcur').innerHTML = t('cl.using') + ` <b style="color:var(--gold)">${name || t('cl.original')}</b>${dirty ? ` <span style="color:var(--warn)">· ${t('cl.dirty')}</span>` : ''}`; };
+showCur(null, false);
+function presetData() {
+  const bb = new THREE.Box3().setFromObject(C.mesh, true).getSize(new THREE.Vector3());
+  return { base: R.id, source: D.source, sliders: Object.fromEntries(SL.map(([id]) => [id, +val[id].toFixed(3)])), mods: modsFromSliders(D.bones, C.roles, val),
+    sizeCm: { w: +(bb.x * 100).toFixed(1), h: +(bb.y * 100).toFixed(1), d: +(bb.z * 100).toFixed(1) },
+    shade: { mode: shade, steps: +$('steps').value, dark: +$('dark').value, outlineMm: +$('ol').value } };
+}
+const PDIR = `workspace/presets/${encodeURIComponent(R.id)}/`;
+async function loadPreset(n) {
+  const P = await (await fetch(`${PDIR}${encodeURIComponent(n)}.json?t=${Date.now()}`)).json();
+  setSliders(P.sliders);
+  if (P.shade) { shade = P.shade.mode; $('steps').value = P.shade.steps; $('dark').value = P.shade.dark; $('ol').value = P.shade.outlineMm;
+    ['steps', 'dark', 'ol'].forEach(id => $(id).dispatchEvent(new Event('input'))); applyShade(); }
+  $('pname').value = P.name; showCur(P.name, false); log(`PRESET ${n} sliders=${JSON.stringify(P.sliders)} height=${(C.mesh.geometry.boundingBox.max.y - C.mesh.geometry.boundingBox.min.y).toFixed(4)}`); $('pmsg').textContent = t('cl.loaded', P.name, new Date(P.saved).toLocaleString(getLang() === 'th' ? 'th-TH' : 'en-GB'));
+}
+async function listPresets() {
+  const L = await fetch(`${PDIR}index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []).catch(() => []);
+  $('plist').innerHTML = L.length ? L.map(n => `<button data-p="${n}">📐 ${n}</button>`).join('') : `<span class="note">${t('cl.nopreset')}</span>`;
+  document.querySelectorAll('#plist button').forEach(b => b.onclick = () => loadPreset(b.dataset.p));
+  return L;
+}
+$('psave').onclick = async () => { const name = $('pname').value.trim();
+  if (!name) { $('pname').focus(); $('pname').style.borderColor = '#ff9b8a'; $('pmsg').textContent = t('cl.needname'); return; }
+  $('pname').style.borderColor = '';
+  const r = await fetch(`/__preset?m=${encodeURIComponent(R.id)}&name=${encodeURIComponent(name)}`, { method: 'POST', body: JSON.stringify(presetData()) }).catch(() => null);
+  if (r && r.ok) showCur(name, false);
+  $('pmsg').textContent = r && r.ok ? t('cl.saved', `${PDIR}${name}.json`) : t('cl.savefail');
+  listPresets(); };
+const presetReady = listPresets().then(L => (Q.get('preset') || R.preset) && L.includes(Q.get('preset') || R.preset) ? loadPreset(Q.get('preset') || R.preset) : null);
+
+// ---------- camera ----------
+const target = new THREE.Vector3(); let yaw = .5, pitch = .15, radius = 1, useOrtho = false, viewName = 'persp', spin = false;
+const VIEWS = { front: [0, 0, true], side: [Math.PI / 2, 0, true], back: [Math.PI, 0, true], persp: [.5, .15, false] };
+function frameAll() { const bb = new THREE.Box3().setFromObject(C.mesh, true); bb.getCenter(target); const sz = bb.getSize(new THREE.Vector3());
+  radius = Math.max(Math.max(sz.y, sz.x * .8) * 1.25 / (2 * Math.tan(THREE.MathUtils.degToRad(persp.fov / 2))), .1); }
+function setView(v) { viewName = v; [yaw, pitch, useOrtho] = VIEWS[v]; document.querySelectorAll('#views button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); frameAll(); }
+// key light follows the camera (from the upper left of whatever you look at) → faces never fall into a patchy shadow
+scene.add(key.target);
+function aimKey() { const r = new THREE.Vector3().setFromMatrixColumn(cam.matrix, 0), u = new THREE.Vector3(0, 1, 0), f = new THREE.Vector3().subVectors(cam.position, target).normalize();
+  key.position.copy(target).addScaledVector(f, radius).addScaledVector(r, -.45 * radius).addScaledVector(u, .6 * radius); key.target.position.copy(target); }
+function placeCam() { cam = useOrtho ? ortho : persp;
+  cam.position.set(target.x + Math.sin(yaw) * Math.cos(pitch) * radius, target.y + Math.sin(pitch) * radius, target.z + Math.cos(yaw) * Math.cos(pitch) * radius); cam.lookAt(target);
+  if (useOrtho) { const h = radius * Math.tan(THREE.MathUtils.degToRad(persp.fov / 2)), a = innerWidth / innerHeight; Object.assign(ortho, { left: -h * a, right: h * a, top: h, bottom: -h }); ortho.updateProjectionMatrix(); } }
+const cv = renderer.domElement; let drag = null;
+cv.addEventListener('contextmenu', e => e.preventDefault()); cv.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, pan: e.button === 1 || e.button === 2 }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.pan) { const r = new THREE.Vector3().setFromMatrixColumn(cam.matrix, 0), u = new THREE.Vector3().setFromMatrixColumn(cam.matrix, 1); target.addScaledVector(r, -dx * radius * .0015).addScaledVector(u, dy * radius * .0015); }
+  else { yaw -= dx * .006; pitch = Math.max(-1.5, Math.min(1.5, pitch + dy * .006)); if (viewName !== 'persp') { viewName = ''; useOrtho = false; document.querySelectorAll('#views button').forEach(b => b.classList.remove('on')); } } });
+cv.addEventListener('pointerup', () => drag = null);
+cv.addEventListener('wheel', e => { e.preventDefault(); radius = Math.max(.03, Math.min(80, radius * (1 + e.deltaY * .001))); }, { passive: false });
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; const v = { 1: 'front', 2: 'side', 3: 'back', 4: 'persp' }[e.key]; if (v) setView(v);
+  if (/^[eE]$/.test(e.key)) $('edges').click(); if (/^[rRfF]$/.test(e.key)) { spin = false; $('spin').classList.remove('on'); setView('persp'); } });
+addEventListener('resize', () => { persp.aspect = innerWidth / innerHeight; persp.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+document.querySelectorAll('#views button').forEach(b => b.onclick = () => setView(b.dataset.v));
+const tog = (id, fn) => { const b = $(id); b.onclick = () => { b.classList.toggle('on'); fn(b.classList.contains('on')); }; };
+tog('tex', on => { useTex = on; applyShade(); });
+document.querySelectorAll('#shades button').forEach(b => b.onclick = () => { shade = b.dataset.s; applyShade(); });
+const sl = (id, fn, fmt) => $(id).oninput = e => { const v = +e.target.value; $(id + 'v').textContent = fmt(v); fn(v); };
+sl('steps', v => setGrad(v, +$('dark').value), v => v);
+sl('dark', v => setGrad(+$('steps').value, v), v => v.toFixed(2));
+sl('ol', v => { olU.value = v / 1000; applyShade(); }, v => v.toFixed(1));
+
+applyShade();
+tog('edges', on => { if (!edges) { edges = C.quadLines().lines; C.root.add(edges); } edges.visible = on; });
+tog('bones', on => skelHelp.visible = on);
+tog('spin', on => spin = on);
+
+// ---------- UV / texture for artists: layout image · checker on the model · transparent UV lines · OBJ in rest pose ----------
+const baseMap = texMat.map;
+const dl = (c, name) => c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; a.click(); });
+function drawUV(g, S, { tex = true, bg = '#969696', lw = 1, color = 'rgba(16,24,48,.75)' } = {}) {
+  g.clearRect(0, 0, S, S); if (bg) { g.fillStyle = bg; g.fillRect(0, 0, S, S); }
+  if (tex && baseMap?.image) g.drawImage(baseMap.image, 0, 0, S, S);
+  g.lineWidth = lw; g.lineJoin = 'round'; g.strokeStyle = color; g.beginPath();
+  D.uvs.forEach((f, fi) => { if (!C.isVisible(D.groups?.[fi] || 'body')) return; f.forEach(([u, v], k) => { const x = u * S, y = (1 - v) * S; k ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath(); });
+  g.stroke();
+}
+const texSize = () => baseMap?.image?.width || 2048;
+function showUV() { if ($('uvp').style.display !== 'block') return; drawUV($('uvc').getContext('2d'), 1024, { tex: $('uvtex').checked }); }
+$('uvview').onclick = () => { const on = $('uvp').style.display !== 'block'; $('uvp').style.display = on ? 'block' : 'none'; $('uvview').classList.toggle('on', on); showUV(); };
+$('uvclose').onclick = () => $('uvview').click(); $('uvtex').onchange = showUV;
+let checkerTex = null;
+function makeChecker() { const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d'), n = 16, s = 64;
+  g.font = 'bold 24px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const d = (x + y) % 2; g.fillStyle = d ? '#3d4a63' : '#ece6da'; g.fillRect(x * s, y * s, s, s); g.fillStyle = d ? '#ece6da' : '#c0392b'; g.fillText(String.fromCharCode(65 + y) + (x + 1), x * s + s / 2, y * s + s / 2); }
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(2, 2); return tx; }
+tog('checker', on => { checkerTex ||= makeChecker(); texMat.map = toonTex.map = on ? checkerTex : baseMap;
+  if (!texMat.map) { texMat.color.set(0x9aa3ad); } texMat.needsUpdate = toonTex.needsUpdate = true; if (on && !useTex) $('tex').click(); });
+$('duv').onclick = () => { const S = texSize(), c = document.createElement('canvas'); c.width = c.height = S; drawUV(c.getContext('2d'), S, { tex: false, bg: null, lw: Math.max(1, S / 1024), color: '#000000' }); dl(c, `${R.id}_UV_Lines.png`); };
+$('duv2').onclick = () => { const S = texSize(), c = document.createElement('canvas'); c.width = c.height = S; drawUV(c.getContext('2d'), S, { lw: Math.max(1, S / 1024) }); dl(c, `${R.id}_UV_Layout.png`); };
+$('dobj').onclick = () => { const src = C.mesh.geometry, g = new THREE.BufferGeometry();
+  for (const a of ['position', 'normal', 'uv']) g.setAttribute(a, src.getAttribute(a).clone()); g.setIndex(C.visibleIndex());
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial()); m.name = R.id;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([new OBJExporter().parse(m)], { type: 'text/plain' })); a.download = `${R.id}_paint.obj`; a.click(); };
+
+// ---------- GLB: rig + every clip, at the proportions on screen (standard material · visible parts only) ----------
+async function exportGLB() {
+  const wasEdges = edges?.visible; if (edges) edges.visible = false; mixer.stopAllAction(); C.skeleton.pose();
+  const keepMat = C.getMaterial(), keepOl = outline.visible; C.root.remove(outline); skelHelp.visible && (skelHelp.visible = false);
+  const g = C.mesh.geometry, fullIdx = g.index, groups = [...g.groups]; g.setIndex(C.visibleIndex()); g.clearGroups(); C.mesh.material = texMat;
+  const glb = await new GLTFExporter().parseAsync(C.root, { binary: true, animations: Object.values(C.clips) });
+  g.setIndex(fullIdx); groups.forEach(x => g.addGroup(x.start, x.count, x.materialIndex));
+  C.root.add(outline); C.setMaterial(keepMat); outline.visible = keepOl;
+  if (edges) edges.visible = wasEdges; if (cur) play(cur);
+  return glb;
+}
+$('glb').onclick = async () => { const glb = await exportGLB(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
+  a.download = `${R.id}${curPreset ? '_' + curPreset : shaped ? '_shaped' : ''}.glb`; a.click(); };
+
+const err = report(); log(`CLONE ${R.id} verts=${D.counts.verts} faces=${D.counts.faces} bones=${D.counts.bones} clips=${names.join(',') || '-'} sliders=${SL.length}/${PROPORTIONS.length} maxErrMM=${err.toFixed(4)}`);
+if (names.length) play(names[0]);
+setView('persp');
+const clock = new THREE.Clock();
+function loop() { requestAnimationFrame(loop); const dt = clock.getDelta(); if (act && playing) { mixer.update(dt); $('t').value = act.time; $('tv').textContent = act.time.toFixed(2); }
+  if (spin) yaw += .005; placeCam(); aimKey(); renderer.render(scene, cam); }
+loop();
+
+// ---------- QC: clone.html?m=<id>&qc=1 → standard / cel shade / clip / edge flow / reshaped × 4 views + UV + preset round trip ----------
+if (QC) {
+  const shot = async n => { placeCam(); aimKey(); renderer.render(scene, cam); await fetch('/__frame?n=' + n, { method: 'POST', body: renderer.domElement.toDataURL('image/png') }); };
+  const views = [['front', 0, 0, true], ['side', Math.PI / 2, 0, true], ['back', Math.PI, 0, true], ['q34', .5, .15, false]];
+  const run = async tag => { for (const [n, y, p, o] of views) { viewName = n; yaw = y; pitch = p; useOrtho = o; frameAll(); await shot(`${tag}-${n}`); } };
+  const mid = () => { if (!names.length) return; play(names[0]); act.paused = true; act.time = C.clips[names[0]].duration / 2; mixer.update(0); };
+  await presetReady;
+  shade = 'lit'; applyShade(); mixer.stopAllAction(); C.skeleton.pose(); await run('1-lit');
+  shade = 'toon'; applyShade(); await run('2-toon');
+  mid(); await run('3-clip');
+  mixer.stopAllAction(); C.skeleton.pose(); edges = C.quadLines(0x0a3a8c).lines; C.root.add(edges); useTex = false; applyShade(); await run('4-edges'); edges.visible = false; useTex = true; applyShade();
+  setSliders({ headSize: 1.25, legLength: 1.2, armLength: 1.15 }); mid(); await run('5-shaped');
+  // ground check: the lowest skinned vertex of the reshaped body must stay on the original floor
+  { const floor = () => { const g = C.mesh.geometry, v = new THREE.Vector3(); let mn = 1e9; mixer.stopAllAction(); C.skeleton.pose(); C.root.updateMatrixWorld(true); C.skeleton.update();
+      for (let i = 0; i < g.attributes.position.count; i++) { v.fromBufferAttribute(g.attributes.position, i); C.mesh.applyBoneTransform(i, v); mn = Math.min(mn, v.y); } return mn * 1000; };
+    const now = floor(); setSliders({}); const was = floor(); setSliders({ headSize: 1.25, legLength: 1.2, armLength: 1.15 });
+    log(`GROUND reshaped floor ${now.toFixed(2)} mm vs original ${was.toFixed(2)} mm (diff ${(now - was).toFixed(2)} mm)`); }
+  // GLB of the reshaped body must load back with the same bones and clips
+  { const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'); const glb = await exportGLB();
+    const back = await new GLTFLoader().parseAsync(glb, ''); let nb = 0; back.scene.traverse(o => { if (o.isBone) nb++; });
+    log(`GLB ${(glb.byteLength / 1024).toFixed(0)} KB · bones ${nb}/${D.bones.length} · clips ${back.animations.length}/${names.length}`); }
+  setSliders({});
+  { const c = document.createElement('canvas'); c.width = c.height = 1024; drawUV(c.getContext('2d'), 1024, {}); await fetch('/__frame?n=6-uv', { method: 'POST', body: c.toDataURL('image/png') }); }
+  log('DONE');
+}
+</script>
+<script type="module" src="nav.js"></script>
+</body></html>

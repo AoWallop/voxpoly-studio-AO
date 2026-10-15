@@ -33,6 +33,13 @@ Answer the user in the language they write in (Thai or English).
 - Re-use motion on our own models as channels ADDED to the model's idle pose (`models/motion.js`); never copy bone angles across rigs.
 - Sound files are the user's. Keep cue times in original clip seconds; use `timePlan()` when clips are cut or sped up.
 
+## FBX Clone, proportions & presets
+- Read `docs/en/fbx-clone.md` first. Files: `workspace/fbx/<Name>.fbx` + `<Name>@<clip>.fbx` + texture → `npm run clone -- <Name> --qc`.
+- **Check the printed bone roles every time** and fix wrong ones in `workspace/clones/index.json` ("roles") — sliders act on roles, not names.
+- Trust a clone only when exactness is < 0.1 mm for every clip (QC log line `maxErrMM`). Above that, something in the copy broke — fix it before reshaping.
+- Reshape with `C.reshape(mods)` / `modsFromSliders()` from `models/clone.js`; never put scale on bones. Presets live in `workspace/presets/<model>/`.
+- Models made of rigid parts open gaps when `length` sliders stretch them — say so instead of hiding it.
+
 ## Reporting to the user
 - Describe results in what they will SEE ("the star is now crisp", "the blue rim is even"), numbers second.
 - When comparing with a reference, label clearly which image is the reference and which is ours.

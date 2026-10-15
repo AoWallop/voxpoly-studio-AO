@@ -1,6 +1,6 @@
 {
   "name": "voxpoly-studio-ao",
-  "version": "1.1.0",
+  "version": "2.5.0",
   "description": "Build game-ready low-poly models in code (three.js), export them to FBX for Unity, and study topology from reference models.",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,8 @@
     "retopo": "node tools/retopo.mjs",
     "doctor": "node tools/doctor.mjs",
     "motion": "node tools/motion.mjs",
-    "cues": "node tools/motion.mjs cues"
+    "cues": "node tools/motion.mjs cues",
+    "clone": "node tools/clone.mjs"
   },
   "engines": {
     "node": ">=18"

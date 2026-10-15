@@ -3,6 +3,33 @@
 Update with `git pull`. Versions follow `MAJOR.MINOR.PATCH`: MINOR = new features, PATCH = fixes, MAJOR = something you must change on your side.
 อัปเดตด้วย `git pull` · เลขเวอร์ชัน `MAJOR.MINOR.PATCH`: MINOR = ของใหม่ · PATCH = แก้บั๊ก · MAJOR = มีสิ่งที่ผู้ใช้ต้องแก้ตาม
 
+## 2.5.0 — FBX Clone, proportions & presets
+
+The version number jumps to 2.5 to match the studio generation it comes from. Nothing you have in `workspace/` needs to change.
+เลขเวอร์ชันข้ามไป 2.5 ให้ตรงกับรุ่นของสตูดิโอต้นทาง ของใน `workspace/` ไม่ต้องแก้อะไร
+
+**EN**
+- **FBX Clone** page (`clone.html`, new tab) + `npm run clone -- <Name>`: copies `workspace/fbx/<Name>.fbx` + every `<Name>@<clip>.fbx` into three.js — vertices in original order, quads kept, UV per corner, top-4 weights, rest skeleton without scale, every clip frame — and proves it: sample vertices are compared with Blender in every clip (typically 0.002–0.05 mm). Several meshes on one armature become show / hide parts.
+- **Bone roles** (`models/rigroles.js`): guesses hips / spine / chest / neck / head / shoulder / upper & lower arm / hand / upper & lower leg / foot / toe for Mixamo, Unreal, Blender and plain naming; printed by `npm run clone`, fixable in `workspace/clones/index.json`.
+- **Proportion system** (`models/clone.js`): 17 sliders built on roles — size · length · sizeOnly · girth · belly — always computed from the original, baked into a new skeleton without scale, feet kept on the floor, clips keep playing. `PROPORTIONS` / `modsFromSliders()` for game code.
+- **Presets**: save / load slider sets per model → `workspace/presets/<model>/<name>.json` (sliders + bone mods + size in cm + shading). Server endpoint `/__preset`.
+- Clone page extras: real edge-flow view, cel shade with outline in mm, UV layout / checker / transparent UV lines / OBJ for painting, GLB export of the reshaped body with rig + clips. `--qc` takes screenshots and checks floor + GLB round trip.
+- **`models/toon.js`**: cel shade for any three.js scene (light steps, screen-space outline capped in meters, skinned outlines, skips glow / UI / particles, picks up objects added later).
+- **`models/perf.js`**: draw calls · triangles · fps in the corner of every page (P to hide), `window.__perf` for scripts.
+- Docs (EN/TH): `fbx-clone.md` (how the exact copy works, roles, the proportion maths, presets, limits) · `look-and-performance.md`.
+- Fixed: duplicated rows in the README feature tables.
+
+**TH**
+- หน้า **ลอก FBX** (`clone.html` แท็บใหม่) + `npm run clone -- <Name>`: คัดลอก `workspace/fbx/<Name>.fbx` + ทุก `<Name>@<ท่า>.fbx` เข้า three.js — จุดยอดตามลำดับเดิม · คงหน้าสี่เหลี่ยม · UV ต่อมุม · น้ำหนัก 4 อันดับแรก · โครง rest ไม่มี scale · ทุกเฟรมของท่า — แล้วพิสูจน์: เทียบจุดตัวอย่างกับ Blender ทุกท่า (ปกติคลาด 0.002–0.05 มม.) · หลาย mesh บน armature เดียวกลายเป็นชิ้นที่เปิดปิดได้
+- **บทบาทกระดูก** (`models/rigroles.js`): เดาสะโพก/ลำตัว/อก/คอ/หัว/ไหปลาร้า/ต้นแขน/แขนท่อนล่าง/มือ/ต้นขา/หน้าแข้ง/เท้า/นิ้วเท้า ได้ทั้งชื่อแบบ Mixamo, Unreal, Blender และแบบธรรมดา · `npm run clone` พิมพ์ให้ตรวจ · แก้ได้ใน `workspace/clones/index.json`
+- **ระบบปรับสัดส่วน** (`models/clone.js`): 17 แถบ ทำงานบนบทบาท — size · length · sizeOnly · girth · belly — คำนวณจากต้นฉบับทุกครั้ง · อบลงโครงใหม่ที่ไม่มี scale · เท้าแตะพื้นเท่าเดิม · ท่ายังเล่นได้ · ใช้ในโค้ดเกมผ่าน `PROPORTIONS` / `modsFromSliders()`
+- **Preset**: บันทึก/โหลดชุดค่าแถบเลื่อนต่อโมเดล → `workspace/presets/<โมเดล>/<ชื่อ>.json` (ค่าแถบ + การเปลี่ยนกระดูก + ขนาด ซม. + แสงเงา) · server เพิ่ม `/__preset`
+- หน้าลอก FBX มีเพิ่ม: ดูเส้น topo จริง · cel shade เส้นขอบเป็น มม. · ผัง UV / ลายตรวจ / เส้น UV โปร่งใส / OBJ สำหรับวาด · ส่งออก GLB ตัวที่ปรับแล้วพร้อม rig และท่า · `--qc` ถ่ายภาพตรวจ + เช็กเท้าแตะพื้น + เปิด GLB กลับมาเช็ก
+- **`models/toon.js`**: แสงเงาการ์ตูนสำหรับฉาก three.js ไหนก็ได้ (ขั้นแสง · เส้นขอบบนจอที่จำกัดความหนาเป็นเมตร · เส้นขอบตัวที่มี skin · ข้ามของเรืองแสง/UI/particle · แปลงของที่เพิ่มทีหลัง)
+- **`models/perf.js`**: draw call · สามเหลี่ยม · fps มุมจอทุกหน้า (กด P ซ่อน) · `window.__perf` ให้สคริปต์อ่าน
+- คู่มือ 2 ภาษา: `fbx-clone.md` (ลอกเป๊ะทำยังไง · บทบาทกระดูก · คณิตของการปรับสัดส่วน · preset · ข้อจำกัด) · `look-and-performance.md`
+- แก้: แถวซ้ำในตารางความสามารถของ README
+
 ## 1.1.0 — animation & sound tools
 
 **EN**

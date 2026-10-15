@@ -1,10 +1,12 @@
 // ===== Top bar: page tabs + EN/TH switch (add <script type="module" src="nav.js"></script> to every page) =====
 // New page = add one line to PAGES. Hidden in headless export / QC runs (?qc ?export) so screenshots stay clean.
 import { t, getLang, setLang, applyLang } from './i18n.js';
+import './models/perf.js';                 // draw / tri / fps meter in the corner (P to hide)
 
 const PAGES = [
   ['index.html', 'nav.studio'],
   ['viewer.html', 'nav.viewer'],
+  ['clone.html', 'nav.clone'],
 ];
 const q = new URLSearchParams(location.search);
 if(!['qc', 'export'].some(k => q.has(k))){
